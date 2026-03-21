@@ -11,8 +11,12 @@ public class BossMovement : MonoBehaviour
 
     //Input actions
     public InputAction moveAction;
+    public InputAction lookAction;
 
-   
+    public float mouseSensitivity = 100f;
+    float xRotation = 0f;
+
+
 
     private void Awake()
     {
@@ -20,6 +24,22 @@ public class BossMovement : MonoBehaviour
         playerInput = GetComponent<PlayerInput>();
 
         moveAction = playerInput.actions["Move"];
+        lookAction = playerInput.actions["Look"];
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
+    private void OnEnable()
+    {
+        moveAction.Enable();
+        lookAction.Enable();
+    }
+
+    private void OnDisable()
+    {
+        moveAction.Disable();
+        lookAction.Disable();
     }
     // Update is called once per frame
     void Update()
@@ -30,10 +50,20 @@ public class BossMovement : MonoBehaviour
         move.y = 0f;
         controller.Move(move * speed * Time.deltaTime);
 
-        if(move != Vector3.zero)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(move);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, 10f * Time.deltaTime);
-        }
+
+        Vector2 look = lookAction.ReadValue<Vector2>();
+        float mouseX = look.x * mouseSensitivity * Time.deltaTime;
+        float mouseY = look.y * mouseSensitivity * Time.deltaTime;
+
+        //vertical (camera)
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, -60f, 60f);
+
+        Camera.main.transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+
+        //horizontal (player)
+        transform.Rotate(Vector3.up * mouseX);
+
     }
+    
 }
