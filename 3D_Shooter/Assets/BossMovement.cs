@@ -7,6 +7,9 @@ public class BossMovement : MonoBehaviour
     PlayerInput playerInput;
     public float speed = 30f;
 
+    float yVelocity = 0f;           //stores vertical movement
+    float gravity = -9.81f;         // gravity value [negative = downward force]
+
     public Transform cameraTransform;
 
     //Input actions
@@ -44,11 +47,27 @@ public class BossMovement : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+
         Vector2 input = moveAction.ReadValue<Vector2>();
         // Vector3 move = new Vector3(input.x, 0f, input.y);
         Vector3 move = cameraTransform.right * input.x + cameraTransform.forward * input.y;
-        move.y = 0f;
-        controller.Move(move * speed * Time.deltaTime);
+
+        //adding gravity
+        if(controller.isGrounded && yVelocity <0)
+        {
+            yVelocity = -2f;       // Small negative value keeps player stuck to ground (prevents bouncing)
+        }
+
+        yVelocity += gravity * Time.deltaTime;       // Apply gravity every frame (makes player fall smoothly)
+
+        // ----------- FINAL MOVEMENT -----------
+        Vector3 finalMove = move * speed;          // Apply speed only to horizontal movement
+
+        finalMove.y = yVelocity;              // Add vertical movement (gravity) separately
+
+        controller.Move(finalMove * Time.deltaTime);         // Move player using CharacterController
+
 
 
         Vector2 look = lookAction.ReadValue<Vector2>();
